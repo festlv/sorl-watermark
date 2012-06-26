@@ -16,7 +16,9 @@ class Engine(WatermarkEngineBase, PILEngine):
     # http://code.activestate.com/recipes/362879-watermark-with-pil/
     def _watermark(self, image, watermark_path, opacity, size): #, position):
                    #mark_width, mark_height):
-        watermark = self.get_image(open(watermark_path))
+
+        watermark = self.get_image(open(watermark_path, 'rb'))
+
         if opacity < 1:
             watermark = self._reduce_opacity(watermark, opacity)
         if image.mode != 'RGBA':

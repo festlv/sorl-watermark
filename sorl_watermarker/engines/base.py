@@ -3,18 +3,9 @@ import os
 from django.conf import settings
 from sorl.thumbnail.engines.base import EngineBase as ThumbnailEngineBase
 from sorl_watermarker.parsers import parse_geometry
+from sorl_watermarker.utils import setting
 
-# TODO: Put this in it's own package, as done by sorl.thumbnail
-STATIC_ROOT = getattr(settings, 'STATIC_ROOT')
-
-THUMBNAIL_WATERMARK = getattr(settings, 'THUMBNAIL_WATERMARK', False)
-THUMBNAIL_WATERMARK_ALWAYS = getattr(settings, 'THUMBNAIL_WATERMARK_ALWAYS',
-                                     True)
-THUMBNAIL_WATERMARK_OPACITY = getattr(settings, 'THUMBNAIL_WATERMARK_OPACITY',
-                                      1)
-assert 0 <= THUMBNAIL_WATERMARK_OPACITY <= 1 # TODO: raise a ValueError here?
-
-THUMBNAIL_WATERMARK_SIZE = getattr(settings, 'THUMBNAIL_WATERMARK_SIZE', False)
+STATIC_ROOT = getattr(settings, 'MEDIA_ROOT')
 
 
 class WatermarkEngineBase(ThumbnailEngineBase):
@@ -24,7 +15,7 @@ class WatermarkEngineBase(ThumbnailEngineBase):
     def create(self, image, geometry, options):
         image = super(WatermarkEngineBase, self).create(image, geometry,
                                                         options)
-        if (THUMBNAIL_WATERMARK_ALWAYS or
+        if (setting('THUMBNAIL_WATERMARK_ALWAYS', True) or
                 'watermark'       in options or
                 'watermark_pos'   in options or
                 'watermark_size'  in options or
@@ -38,16 +29,16 @@ class WatermarkEngineBase(ThumbnailEngineBase):
 
         Takes care of all the options handling.
         """
-        if not THUMBNAIL_WATERMARK:
+        if not setting('THUMBNAIL_WATERMARK', False):
             raise AttributeError('Trying to apply a watermark, '
                                  'however no THUMBNAIL_WATERMARK defined')
-        watermark_path = os.path.join(STATIC_ROOT, THUMBNAIL_WATERMARK)
 
+        watermark_path = os.path.join(STATIC_ROOT, setting('THUMBNAIL_WATERMARK'))
         if not 'watermark_alpha' in options:
-            options['watermark_alpha'] = THUMBNAIL_WATERMARK_OPACITY
+            options['watermark_alpha'] = setting('THUMBNAIL_WATERMARK_OPACITY', 1)
 
-        if not 'watermark_size' in options and THUMBNAIL_WATERMARK_SIZE:
-            options['watermark_size'] = THUMBNAIL_WATERMARK_SIZE
+        if not 'watermark_size' in options and setting('THUMBNAIL_WATERMARK_SIZE'):
+            options['watermark_size'] = setting('THUMBNAIL_WATERMARK_SIZE')
         elif 'watermark_size' in options:
             options['watermark_size'] = parse_geometry(
                                             options['watermark_size'],
